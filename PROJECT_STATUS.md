@@ -8,7 +8,7 @@
 | Language | TBD | |
 | Editor | Visual Studio Code | |
 | Version Control | GitHub | |
-| Libraries | TBD | |
+| Libraries | mutagen, os, shutil, pathlib, re | |
 
 ---
 
@@ -28,7 +28,9 @@
 ## Decisions Log
 | Date | Decision | Reason |
 |------|----------|--------|
-| — | None yet | |
+| 04-13-2026 | Python chosen as language | Beginner-friendly, excellent file/metadata library support, large community | 
+|04-13-2026| VS Code chosen as editor | Lightweight, great Python/Git support |
+|04-13-2026| Libraries planned: mutagen, os, shutil, pathlib, re | Best fit for file ops and metadata |
 
 ---
 
