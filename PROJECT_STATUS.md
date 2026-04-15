@@ -18,7 +18,7 @@
 | 1 | Rename files using date from filename (MM-DD-YYYY) | Complete |
 | 2 | Configurable filename parsing (patterns in config) | Complete |
 | 3 | Metadata fallback if date not in filename | Complete (untested with real tag data) |
-| 4 | Preserve original filename in metadata | Not Started |
+| 4 | Preserve original filename in metadata | Complete |
 | 5 | Sort files into year folders | Not Started |
 | 6 | Handle duplicate dates | Not Started |
 | 7 | Optional prefix/suffix text in final filename | Not Started |
@@ -36,6 +36,9 @@
 | 04-13-2026 | Canon folder name 665_1212 may contain partial date — investigate later | Flagged for future pattern work |
 | 04-14-2026 | normalize_date() assumes YYYYMMDD for non-dashed formats | Other formats may need handling later |
 | 04-14-2026 | Metadata tags handled: TDRC (MP3) and ©day (MP4) | Most common formats for our devices |
+| 04-15-2026 | Used custom field MEDIABUTLER_ORIGINAL over comment field | Avoids clobbering user data |
+| 04-15-2026 | MP4 key format: ----:com.apple.iTunes:MEDIABUTLER_ORIGINAL | Required format for custom MP4 tags |
+| 04-15-2026 | MP4 values must be encoded as utf-8 bytes | mutagen MP4 requirement |
 
 ---
 
@@ -43,6 +46,7 @@
 - Feature 3 is untested with real embedded tag data — sample files had no tags
 - May want to add an MP3 with embedded tags later to verify TDRC works correctly
 - normalize_date() may need updating if new date formats are discovered
+- Stray MEDI tag left on sample file from early testing — harmless but noted
 
 ---
 
@@ -52,6 +56,6 @@
 ---
 
 ## Next Steps
-- Sub-Session 3: Feature 4 — Write original filename into metadata (no overwrite on re-run)
+- Sub-Session 4: Feature 5 — Sort files into year folders after renaming
 - Future: Test Feature 3 with a real tagged MP3 file
 - Future: Investigate Canon folder name 665_1212 for partial date extraction
