@@ -2,6 +2,7 @@ from config import DATE_PATTERNS
 from mutagen import File
 from pathlib import Path
 import re
+import shutil
 def normalize_date(raw):
     rawstr = str(raw)
     if "-" in rawstr:
@@ -50,3 +51,8 @@ def original_filename_to_metadata(filepath, filename):
     else: 
         media.tags[key] = filename 
     media.save()
+
+def move_to_year_folder(filepath, norm_date):
+    des_folder = Path(filepath).parent / (norm_date[0:4])
+    des_folder.mkdir(parents=True, exist_ok=True)
+    shutil.move(filepath, des_folder)
