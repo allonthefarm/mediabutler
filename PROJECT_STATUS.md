@@ -19,7 +19,7 @@
 | 2 | Configurable filename parsing (patterns in config) | Complete |
 | 3 | Metadata fallback if date not in filename | Complete (untested with real tag data) |
 | 4 | Preserve original filename in metadata | Complete |
-| 5 | Sort files into year folders | Not Started |
+| 5 | Sort files into year folders | Complete |
 | 6 | Handle duplicate dates | Not Started |
 | 7 | Optional prefix/suffix text in final filename | Not Started |
 
@@ -39,6 +39,7 @@
 | 04-15-2026 | Used custom field MEDIABUTLER_ORIGINAL over comment field | Avoids clobbering user data |
 | 04-15-2026 | MP4 key format: ----:com.apple.iTunes:MEDIABUTLER_ORIGINAL | Required format for custom MP4 tags |
 | 04-15-2026 | MP4 values must be encoded as utf-8 bytes | mutagen MP4 requirement |
+| 04-15-2026 | shutil.move() used to move files into year subfolders | Folder created with exist_ok=True to avoid crashes on duplicates |
 
 ---
 
@@ -56,6 +57,6 @@
 ---
 
 ## Next Steps
-- Sub-Session 4: Feature 5 — Sort files into year folders after renaming
+- Sub-Session 5: Feature 6 — Handle duplicate dates (subfolders, Part 1/Part 2, Part A/B sequencing)
 - Future: Test Feature 3 with a real tagged MP3 file
 - Future: Investigate Canon folder name 665_1212 for partial date extraction
