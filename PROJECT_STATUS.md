@@ -20,7 +20,7 @@
 | 3 | Metadata fallback if date not in filename | Complete (untested with real tag data) |
 | 4 | Preserve original filename in metadata | Complete |
 | 5 | Sort files into year folders | Complete |
-| 6 | Handle duplicate dates | Not Started |
+| 6 | Handle duplicate dates | In Progress |
 | 7 | Optional prefix/suffix text in final filename | Not Started |
 
 ---
@@ -40,10 +40,18 @@
 | 04-15-2026 | MP4 key format: ----:com.apple.iTunes:MEDIABUTLER_ORIGINAL | Required format for custom MP4 tags |
 | 04-15-2026 | MP4 values must be encoded as utf-8 bytes | mutagen MP4 requirement |
 | 04-15-2026 | shutil.move() used to move files into year subfolders | Folder created with exist_ok=True to avoid crashes on duplicates |
+| 04-18-2026 | Files from same source folder = same sequence | Logical grouping by recording session |
+| 04-18-2026 | Multiple source folders on same date = different sequences (A, B, C...) | Distinguishes separate recording sessions |
+| 04-18-2026 | Different file types on same date = no conflict, no part numbers needed | Extension included in grouping key |
+| 04-18-2026 | Folder order determined alphabetically for predictability | Users can prefix folder names with numbers to force order |
+| 04-18-2026 | None-date files moved to unknown/ folder for manual handling | Avoids silently dropping unprocessable files |
 
 ---
 
 ## Known Gaps / Flags
+- Feature 6 not yet complete — still needed: call assign_part_numbers on duplicate groups, rename/move files into date subfolders, handle None-date files
+- None-date files should be moved with their containing folder to an unknown/ folder
+- Year folder location bug: year folders must be created inside the MediaButler main folder, not relative to script location — fix after Feature 6
 - Feature 3 is untested with real embedded tag data — sample files had no tags
 - May want to add an MP3 with embedded tags later to verify TDRC works correctly
 - normalize_date() may need updating if new date formats are discovered
@@ -57,6 +65,8 @@
 ---
 
 ## Next Steps
-- Sub-Session 5: Feature 6 — Handle duplicate dates (subfolders, Part 1/Part 2, Part A/B sequencing)
+- Sub-Session 6: Complete Feature 6 — wire up assign_part_numbers, rename/move files into date subfolders, handle None-date files
+- Sub-Session 7 (after Feature 6): Fix year folder location bug
+- Future: Feature 7 — optional prefix/suffix text in final filename
 - Future: Test Feature 3 with a real tagged MP3 file
 - Future: Investigate Canon folder name 665_1212 for partial date extraction
