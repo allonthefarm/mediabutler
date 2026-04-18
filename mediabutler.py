@@ -3,6 +3,7 @@ from mutagen import File
 from pathlib import Path
 import re
 import shutil
+import os
 def normalize_date(raw):
     rawstr = str(raw)
     if "-" in rawstr:
@@ -34,6 +35,13 @@ def extract_date_from_metadata(filepath):
         return None
     return normalize_date(raw)
 
+def get_date(filepath, filename):
+    date = extract_date(filename)
+    if date is None:
+        date = extract_date_from_metadata(filepath)
+    # future sources would go here
+    return date
+
 def original_filename_to_metadata(filepath, filename):
     media = File(filepath)
     if media is None:
@@ -56,3 +64,35 @@ def move_to_year_folder(filepath, norm_date):
     des_folder = Path(filepath).parent / (norm_date[0:4])
     des_folder.mkdir(parents=True, exist_ok=True)
     shutil.move(filepath, des_folder)
+
+def scan_files(filepath):
+    file_index = []
+    for folder, subfolders, files in os.walk(filepath):
+        for filename in files:
+            file_index.append({"path": Path(folder) / filename, "date": get_date(Path(folder) / filename, filename), "extension": Path(filename).suffix, "source_folder": folder})
+    return file_index
+
+def media_file_sort(file_index):
+    indexed_files = {}
+    for file in file_index:
+        key = file["date"] + "_" + file["extension"]
+        if key in indexed_files:
+            indexed_files[key].append(file)
+        else:
+            indexed_files[key] = [file]
+    return indexed_files
+
+def assign_part_numbers(group):
+    unique_folders = sorted(set(f["source_folder"] for f in group))
+    files = sorted(group, key=lambda f: f["source_folder"])
+    folder_counts = {}
+    for file in files:
+        folder = file["source_folder"]
+        position = unique_folders.index(folder)
+        count = folder_counts.get(folder, 0)
+        folder_counts[folder] = count + 1
+        if len(unique_folders) > 1:
+            file["part"] = "part " + chr(ord('a') + position) + str(count + 1) 
+        else:
+            file["part"] = "part " + str(count + 1)
+    return group
