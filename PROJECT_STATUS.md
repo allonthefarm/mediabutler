@@ -20,8 +20,8 @@
 | 3 | Metadata fallback if date not in filename | Complete (untested with real tag data) |
 | 4 | Preserve original filename in metadata | Complete |
 | 5 | Sort files into year folders | Complete |
-| 6 | Handle duplicate dates | In Progress |
-| 7 | Optional prefix/suffix text in final filename | Not Started |
+| 6 | Handle duplicate dates | Complete |
+| 7 | Optional prefix/suffix text in final filename | In Progress (function built, not wired up) |
 
 ---
 
@@ -45,13 +45,18 @@
 | 04-18-2026 | Different file types on same date = no conflict, no part numbers needed | Extension included in grouping key |
 | 04-18-2026 | Folder order determined alphabetically for predictability | Users can prefix folder names with numbers to force order |
 | 04-18-2026 | None-date files moved to unknown/ folder for manual handling | Avoids silently dropping unprocessable files |
+| 04-22-2026 | Destination structure: target_folder / year / date / new_name | Keeps files organized hierarchically |
+| 04-22-2026 | file.get("part") used for safe access | Handles files that didn't receive part numbers |
+| 04-22-2026 | Year folder bug fixed — anchored to target_folder explicitly | Previously used Path(filepath).parent, now uses target path |
 
 ---
 
 ## Known Gaps / Flags
-- Feature 6 not yet complete — still needed: call assign_part_numbers on duplicate groups, rename/move files into date subfolders, handle None-date files
-- None-date files should be moved with their containing folder to an unknown/ folder
-- Year folder location bug: year folders must be created inside the MediaButler main folder, not relative to script location — fix after Feature 6
+- process_files() currently handles file moves directly; could be extracted into its own move function for cleaner separation (design question — see sub-session review)
+- build_filename() call order in process_files() may not match function signature — worth double-checking before running
+- move_to_year_folder() is now redundant and can be removed
+- No main entry point yet — nothing calls process_files() with a real path
+- Feature 7 (prefix/suffix) function exists but config/runtime wiring not done
 - Feature 3 is untested with real embedded tag data — sample files had no tags
 - May want to add an MP3 with embedded tags later to verify TDRC works correctly
 - normalize_date() may need updating if new date formats are discovered
@@ -65,8 +70,8 @@
 ---
 
 ## Next Steps
-- Sub-Session 6: Complete Feature 6 — wire up assign_part_numbers, rename/move files into date subfolders, handle None-date files
-- Sub-Session 7 (after Feature 6): Fix year folder location bug
-- Future: Feature 7 — optional prefix/suffix text in final filename
+- Sub-Session 7: Complete Feature 7 — wire prefix/suffix with config default + runtime override
+- Sub-Session 7: Add a main entry point so the program can actually be launched
+- Sub-Session 7: Clean up redundant move_to_year_folder()
 - Future: Test Feature 3 with a real tagged MP3 file
 - Future: Investigate Canon folder name 665_1212 for partial date extraction
