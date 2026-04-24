@@ -96,3 +96,51 @@ def assign_part_numbers(group):
         else:
             file["part"] = "part " + str(count + 1)
     return group
+
+
+def no_date_sort(file_index):
+    dated_files = []
+    undated_files = []
+    for file in file_index:
+        if file["date"] is None:
+            undated_files.append(file)
+        else:
+            dated_files.append(file)
+    return dated_files, undated_files
+
+def build_filename(date, part, extension, prefix="", suffix=""):
+    parts = []
+    if prefix:
+        parts.append(prefix)
+    parts.append(date)
+    if part:
+        parts.append(part)
+    if suffix:
+        parts.append(suffix)
+    # you add the rest...
+    filename = " ".join(parts) + extension
+    return filename
+
+def process_files(target_folder):
+    #1. scan files
+    file_index = scan_files(target_folder)
+    #2. split dated and undated
+    file_index_dated, file_index_undated = no_date_sort(file_index)
+    #3 move undated to unknown/
+    unknown_folder = Path(target_folder) / "unknown"
+    unknown_folder.mkdir(parents=True, exist_ok=True)
+    for file in file_index_undated:
+        shutil.move(file["path"], unknown_folder)
+    #4 group dated files
+    grouped_files = media_file_sort(file_index_dated)
+    #5for each group, assign part numbers if needed and rename and move files
+    for key, group in grouped_files.items():
+        if len(group) > 1:
+            assign_part_numbers(group)
+        for file in group:
+            new_name = build_filename(file["date"], file["extension"], file.get("part"))
+            dest_folder = Path(target_folder) / file["date"][0:4] / file["date"]
+            dest_folder.mkdir(parents=True, exist_ok=True)
+            shutil.move(file["path"], dest_folder /new_name)
+
+    return None
