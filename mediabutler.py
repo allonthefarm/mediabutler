@@ -128,7 +128,11 @@ def process_files(target_folder):
     unknown_folder = output_to_folder / "unknown"
     unknown_folder.mkdir(parents=True, exist_ok=True)
     for file in file_index_undated:
-        shutil.move(file["path"], unknown_folder)
+        file_path = Path(file["path"])
+        relative_parent = file_path.parent.relative_to(target_folder)
+        dest_folder_un = unknown_folder / relative_parent
+        dest_folder_un.mkdir(parents=True, exist_ok=True)
+        shutil.move(file_path, dest_folder_un)
     #4 group dated files
     grouped_files = media_file_sort(file_index_dated)
     #5for each group, assign part numbers if needed and rename and move files
