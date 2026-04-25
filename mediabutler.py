@@ -65,7 +65,7 @@ def scan_files(filepath):
     file_index = []
     for folder, subfolders, files in os.walk(filepath):
         for filename in files:
-            file_index.append({"path": Path(folder) / filename, "date": get_date(Path(folder) / filename, filename), "extension": Path(filename).suffix, "source_folder": folder})
+            file_index.append({"path": Path(folder) / filename, "date": get_date(Path(folder) / filename, filename), "extension": Path(filename).suffix.lower(), "source_folder": folder})
     return file_index
 
 def media_file_sort(file_index):
@@ -118,12 +118,14 @@ def build_filename(date, part, extension, prefix="", suffix=""):
     return filename
 
 def process_files(target_folder):
+    # path to all out put
+    output_to_folder = Path(target_folder) / "output"
     #1. scan files
     file_index = scan_files(target_folder)
     #2. split dated and undated
     file_index_dated, file_index_undated = no_date_sort(file_index)
     #3 move undated to unknown/
-    unknown_folder = Path(target_folder) / "unknown"
+    unknown_folder = output_to_folder / "unknown"
     unknown_folder.mkdir(parents=True, exist_ok=True)
     for file in file_index_undated:
         shutil.move(file["path"], unknown_folder)
@@ -135,7 +137,7 @@ def process_files(target_folder):
             assign_part_numbers(group)
         for file in group:
             new_name = build_filename(file["date"],  file.get("part"), file["extension"], prefix=PREFIX, suffix=SUFFIX)
-            dest_folder = Path(target_folder) / file["date"][0:4] / file["date"]
+            dest_folder = output_to_folder / file["date"][0:4] / file["date"]
             dest_folder.mkdir(parents=True, exist_ok=True)
             shutil.move(file["path"], dest_folder /new_name)
     return None
