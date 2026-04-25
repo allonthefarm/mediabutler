@@ -1,9 +1,10 @@
-from config import DATE_PATTERNS
+from config import DATE_PATTERNS, PREFIX, SUFFIX
 from mutagen import File
 from pathlib import Path
 import re
 import shutil
 import os
+
 def normalize_date(raw):
     rawstr = str(raw)
     if "-" in rawstr:
@@ -59,11 +60,6 @@ def original_filename_to_metadata(filepath, filename):
     else: 
         media.tags[key] = filename 
     media.save()
-
-def move_to_year_folder(filepath, norm_date):
-    des_folder = Path(filepath).parent / (norm_date[0:4])
-    des_folder.mkdir(parents=True, exist_ok=True)
-    shutil.move(filepath, des_folder)
 
 def scan_files(filepath):
     file_index = []
@@ -138,9 +134,11 @@ def process_files(target_folder):
         if len(group) > 1:
             assign_part_numbers(group)
         for file in group:
-            new_name = build_filename(file["date"], file["extension"], file.get("part"))
+            new_name = build_filename(file["date"],  file.get("part"), file["extension"], prefix=PREFIX, suffix=SUFFIX)
             dest_folder = Path(target_folder) / file["date"][0:4] / file["date"]
             dest_folder.mkdir(parents=True, exist_ok=True)
             shutil.move(file["path"], dest_folder /new_name)
-
     return None
+
+if __name__ == "__main__":
+    process_files(r"D:\Users\allon\Documents\Programing\mediabutler\Test")
