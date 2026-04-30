@@ -117,34 +117,61 @@ def build_filename(date, part, extension, prefix="", suffix=""):
     filename = " ".join(parts) + extension
     return filename
 
-def process_files(target_folder):
-    # path to all out put
-    output_to_folder = Path(target_folder) / "output"
-    #1. scan files
-    file_index = scan_files(target_folder)
-    #2. split dated and undated
-    file_index_dated, file_index_undated = no_date_sort(file_index)
+def move_undated_files( undated, target_folder, unknown_folder):
     #3 move undated to unknown/
-    unknown_folder = output_to_folder / "unknown"
     unknown_folder.mkdir(parents=True, exist_ok=True)
-    for file in file_index_undated:
+    for file in undated:
         file_path = Path(file["path"])
         relative_parent = file_path.parent.relative_to(target_folder)
         dest_folder_un = unknown_folder / relative_parent
         dest_folder_un.mkdir(parents=True, exist_ok=True)
         shutil.move(file_path, dest_folder_un)
-    #4 group dated files
-    grouped_files = media_file_sort(file_index_dated)
-    #5for each group, assign part numbers if needed and rename and move files
+    un_count_files = len(undated)
+    un_count_folders = len(set(f["source_folder"] for f in undated))
+    return un_count_files, un_count_folders
+
+def move_dated_files(grouped_files, output_folder):
+    files_per_year = {}
+    per_date = {}
+
     for key, group in grouped_files.items():
+        # 1. assign part numbers if needed
         if len(group) > 1:
             assign_part_numbers(group)
+        # 2. figure out stats for this group
+        date = group[0]["date"]
+        year = date[0:4]
+        files_per_year[year] = files_per_year.get(year, 0) + len(group)
+        per_date[date] = {
+            "file_count": len(group),
+            "source_groups": len(set(f["source_folder"] for f in group))
+        }
+        # 3. move each file
         for file in group:
             new_name = build_filename(file["date"],  file.get("part"), file["extension"], prefix=PREFIX, suffix=SUFFIX)
-            dest_folder = output_to_folder / file["date"][0:4] / file["date"]
+            dest_folder = output_folder / file["date"][0:4] / file["date"]
             dest_folder.mkdir(parents=True, exist_ok=True)
             shutil.move(file["path"], dest_folder /new_name)
-    return None
+    return files_per_year, per_date
+
+
+
+
+def process_files(target_folder):
+        output_folder = Path(target_folder) / "output"
+        unknown_folder = output_folder / "unknown"
+
+        file_index = scan_files(target_folder)
+        dated, undated = no_date_sort(file_index)
+        grouped = media_file_sort(dated)
+
+        un_files, un_folders = move_undated_files(undated, target_folder, unknown_folder)
+        files_per_year, per_date = move_dated_files(grouped, output_folder)
+
+        # print summary here soon...
+
+        return None
+
 
 if __name__ == "__main__":
     process_files(r"D:\Users\allon\Documents\Programing\mediabutler\Test")
