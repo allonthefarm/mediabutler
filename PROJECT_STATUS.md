@@ -21,7 +21,9 @@
 | 4 | Preserve original filename in metadata | Complete |
 | 5 | Sort files into year folders | Complete |
 | 6 | Handle duplicate dates | Complete |
-| 7 | Optional prefix/suffix text in final filename | In Progress (function built, not wired up) |
+| 7 | Optional prefix/suffix text in final filename | Complete (runtime override deferred) |
+
+**🎉 All 7 original features complete — program runs end-to-end!**
 
 ---
 
@@ -45,22 +47,24 @@
 | 04-18-2026 | Different file types on same date = no conflict, no part numbers needed | Extension included in grouping key |
 | 04-18-2026 | Folder order determined alphabetically for predictability | Users can prefix folder names with numbers to force order |
 | 04-18-2026 | None-date files moved to unknown/ folder for manual handling | Avoids silently dropping unprocessable files |
-| 04-22-2026 | Destination structure: target_folder / year / date / new_name | Keeps files organized hierarchically |
+| 04-22-2026 | Destination structure: target_folder/output/year/date/new_name | Keeps files organized hierarchically |
 | 04-22-2026 | file.get("part") used for safe access | Handles files that didn't receive part numbers |
 | 04-22-2026 | Year folder bug fixed — anchored to target_folder explicitly | Previously used Path(filepath).parent, now uses target path |
+| 04-30-2026 | Extensions normalized to lowercase in scan_files | Fixes case-sensitivity bug (.wav vs .WAV grouping) |
+| 04-30-2026 | output/ wrapper folder added for year folders and unknown/ | Cleaner separation between source and processed files |
+| 04-30-2026 | DJI sub-sequence letters deferred — not confirmed as needed yet | Wait for evidence the issue actually appears in real files |
 
 ---
 
 ## Known Gaps / Flags
-- process_files() currently handles file moves directly; could be extracted into its own move function for cleaner separation (design question — see sub-session review)
-- build_filename() call order in process_files() may not match function signature — worth double-checking before running
-- move_to_year_folder() is now redundant and can be removed
-- No main entry point yet — nothing calls process_files() with a real path
-- Feature 7 (prefix/suffix) function exists but config/runtime wiring not done
-- Feature 3 is untested with real embedded tag data — sample files had no tags
+- Claire's cam files have no filename date AND no metadata date — needs a third date source (next priority)
+- End-of-program summary not yet built (stats already collected in move_dated_files)
+- Runtime override for prefix/suffix deferred — config defaults work for now
+- Feature 3 still untested with real embedded tag data
 - May want to add an MP3 with embedded tags later to verify TDRC works correctly
 - normalize_date() may need updating if new date formats are discovered
 - Stray MEDI tag left on sample file from early testing — harmless but noted
+- If DJI sub-sequence handling becomes needed: two-function approach (detect + assign), detection via `_` splitting, check first segment for DJI case-insensitive
 
 ---
 
@@ -70,8 +74,8 @@
 ---
 
 ## Next Steps
-- Sub-Session 7: Complete Feature 7 — wire prefix/suffix with config default + runtime override
-- Sub-Session 7: Add a main entry point so the program can actually be launched
-- Sub-Session 7: Clean up redundant move_to_year_folder()
+- Sub-Session 8: Add a date source for Claire's cam (likely folder name or file modification time)
+- Future: End-of-program summary report
+- Future: Runtime override for prefix/suffix
 - Future: Test Feature 3 with a real tagged MP3 file
 - Future: Investigate Canon folder name 665_1212 for partial date extraction
