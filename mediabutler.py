@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 import shutil
 import os
+import datetime
 
 def normalize_date(raw):
     rawstr = str(raw)
@@ -36,10 +37,38 @@ def extract_date_from_metadata(filepath):
         return None
     return normalize_date(raw)
 
+def extract_date_from_folder(folder_name): #Get month and day form the folders from the Cannon VIXIA Camera
+    parts = folder_name.split("_")  #Split 665_1212
+    mmdd = parts[1] #Select month and day
+    month = mmdd[0:2] #Select month
+    day = mmdd[2:4]   #Select day
+    return month, day
+
+def extract_year_from_mtime(filepath): #get the year from Media created windows property's 
+    file_stats = os.stat(filepath)
+    file_stat_year = datetime.datetime.fromtimestamp(file_stats.st_mtime) #returns 2025-12-12 11:53:11
+    mtime_day = str(file_stat_year.day).zfill(2)
+    mtime_month = str(file_stat_year.month).zfill(2)
+    mtime_year =str(file_stat_year.year)
+
+    return mtime_day, mtime_month, mtime_year
+
+def extract_date_from_canon(filepath, folder_name):
+    mtime_day, mtime_month, mtime_year = extract_year_from_mtime(filepath)
+    folder_month, folder_day = extract_date_from_folder(folder_name)
+    if mtime_day == folder_day and mtime_month == folder_month:
+        return folder_month + "-" + folder_day + "-" + mtime_year # confident! build and return the date string MM-DD-YYYY
+    else:
+        return folder_month + "-" + folder_day + "-_" + mtime_year + "_" # not confident, flag the year with underscores
+        
+
 def get_date(filepath, filename):
     date = extract_date(filename)
     if date is None:
         date = extract_date_from_metadata(filepath)
+    if date is None:
+        folder_name = Path(filepath).parent.name
+        date = extract_date_from_canon(filepath, folder_name)
     # future sources would go here
     return date
 
