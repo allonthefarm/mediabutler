@@ -8,7 +8,7 @@
 | Language | Python 3.14.4 | |
 | Editor | Visual Studio Code | |
 | Version Control | GitHub | |
-| Libraries | mutagen, os, shutil, pathlib, re | mutagen installed |
+| Libraries | mutagen, os, shutil, pathlib, re, datetime | mutagen installed |
 
 ---
 
@@ -22,7 +22,10 @@
 | 5 | Sort files into year folders | Complete |
 | 6 | Handle duplicate dates | Complete |
 | 7 | Optional prefix/suffix text in final filename | Complete (runtime override deferred) |
-| 8 | Canon VIXIA date source (folder + st_mtime cross-check) | Complete (bug active — see flags) |
+| 8 | Canon VIXIA date source (folder + st_mtime cross-check) | Complete |
+| 9 | Empty folder cleanup after processing | Complete |
+
+**🎉 Program runs reliably end-to-end on repeat passes!**
 
 ---
 
@@ -55,19 +58,23 @@
 | 05-01-2026 | st_mtime chosen over metadata for Canon files | Canon files have no embedded mutagen-readable tags |
 | 05-01-2026 | Folder name + mtime cross-check used for Canon date confidence | High confidence when partial date matches; underscores mark uncertain year |
 | 05-01-2026 | Inferred-year files go in inferred year folder, not 0000/ | Keeps files browsable in expected year; underscores flag uncertainty |
+| 05-04-2026 | All date functions return YYYY-MM-DD format | Consistent contract across functions; downstream code can rely on [0:4] for year |
+| 05-04-2026 | Uncertain Canon year format: YYYY_-MM-DD | Underscore stays attached to year for visual flag, [0:4] still extracts year cleanly |
+| 05-04-2026 | No-year Canon files use 0000-MM-DD | Routes to 0000/ folder for manual sorting |
+| 05-04-2026 | extract_date_from_canon() only called when folder name matches \d{3}_\d{4} | Prevents misfiring on non-Canon folders |
+| 05-04-2026 | scan_files() skips output/ folder during walk | Prevents second-run from re-processing already-renamed files |
+| 05-04-2026 | clean_up() uses Path.iterdir() for live checks instead of os.walk cache | os.walk caches folder contents at start; iterdir() reflects real-time state |
 
 ---
 
 ## Known Gaps / Flags
-- 🐛 **Active bug**: Canon files landing in folder named "12-1" instead of expected date — likely a date-format mismatch downstream of new Canon function
-- Files with no year info at all (no st_mtime fallback) — 0000/ year placeholder logic not yet built
-- Original filename in MEDIABUTLER_ORIGINAL custom field doesn't appear in Windows Properties — by design, since custom fields aren't shown there (use mutagen to verify)
 - End-of-program summary not yet built (stats already collected in move_dated_files)
 - Runtime override for prefix/suffix deferred — config defaults work for now
 - May want to add an MP3 with embedded tags later to verify TDRC works correctly
 - normalize_date() may need updating if new date formats are discovered
 - Stray MEDI tag left on sample file from early testing — harmless but noted
 - If DJI sub-sequence handling becomes needed: two-function approach (detect + assign), detection via `_` splitting, check first segment for DJI case-insensitive
+- original_filename_to_metadata() exists but isn't being called anywhere in process_files() — verify it's wired in or wire it in
 
 ---
 
@@ -77,7 +84,6 @@
 ---
 
 ## Next Steps
-- Sub-Session 9: Fix "12-1" folder bug + handle no-year case (0000/ placeholder)
-- Future: End-of-program summary report
+- Sub-Session 10: Build end-of-program print summary using stats from move_dated_files (files_per_year, per_date) and move_undated_files (un_count_files, un_count_folders)
 - Future: Runtime override for prefix/suffix
-- Future: Investigate Canon folder name 665_1212 for partial date extraction (now done!)
+- Future: Verify original_filename_to_metadata() is being called during processing
