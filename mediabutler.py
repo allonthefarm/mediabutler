@@ -1,6 +1,7 @@
 from config import DATE_PATTERNS, PREFIX, SUFFIX
 from mutagen import File
 from pathlib import Path
+from mutagen.id3 import TXXX
 import re
 import shutil
 import os
@@ -76,10 +77,15 @@ def get_date(filepath, filename):
     return date
 
 def original_filename_to_metadata(filepath, filename):
-    media = File(filepath)
+    try:
+        media = File(filepath)
+    except Exception:
+        return None
+    if Path(filepath).suffix.lower() not in [ ".mp3", ".wav"]: # Not adding to .mp4 for speed
+        return None
     if media is None:
         return None
-    if Path(filepath).suffix == ".mp4":
+    if Path(filepath).suffix.lower() == ".mp4":
         key = "----:com.apple.iTunes:MEDIABUTLER_ORIGINAL"
     else: key = "MEDIABUTLER_ORIGINAL"  
     if media.tags is None:
@@ -87,8 +93,10 @@ def original_filename_to_metadata(filepath, filename):
     tags = media.tags.get(key)
     if tags is not None:
         return None
-    if Path(filepath).suffix == ".mp4":
+    if Path(filepath).suffix.lower() == ".mp4":
         media.tags[key] = filename.encode("utf-8")
+    elif Path(filepath).suffix.lower() == ".wav":
+        media.tags[key] = TXXX(encoding=3, desc="MEDIABUTLER_ORIGINAL", text=filename)
     else: 
         media.tags[key] = filename 
     media.save()
@@ -186,6 +194,7 @@ def move_dated_files(grouped_files, output_folder):
             new_name = build_filename(file["date"],  file.get("part"), file["extension"], prefix=PREFIX, suffix=SUFFIX)
             dest_folder = output_folder / file["date"][0:4] / file["date"]
             dest_folder.mkdir(parents=True, exist_ok=True)
+            original_filename_to_metadata(file["path"], file["path"].name)
             shutil.move(file["path"], dest_folder /new_name)
     return files_per_year, per_date
 
@@ -212,10 +221,40 @@ def process_files(target_folder):
         clean_up(output_folder, target_folder)
 
         # print summary here soon...
+        #    ========== MediaButler Summary ==========
+        #Total files processed:        55
+        #Total days with recordings:   12
+        #  Unknown date (→ unknown/):   3
 
+        #By year:
+        #  2026:                        10
+        #  2025:                         5
+
+        #Dates with multiple files:
+        #  2025-06-12:   3 files from 2 folders
+        #  2026-01-01:   2 files from 1 folder
+        #=========================================
+        print("=============== MediaButler Summary ===============")
+        all_files = len(dated) + len(undated)
+        print("Total files processed:        " + str(all_files))
+        print("Total days with recordings:   " + str(len(per_date)))
+        print("  Unknown date (→ unknown/):   " + str(un_files))
+        print(" ")
+        print("By year:")
+        for per_year, count in files_per_year.items():
+            print(" " + per_year +":                        " + str(count))
+        print(" ")
+        print("Dates with multiple files:")
+        for per_day, count in per_date.items():
+            if count["file_count"] > 1:
+                folder_word = "folders" if count["source_groups"] > 1 else "folder"
+                print(" " + per_day +":                        " + str(count["file_count"]) + " files from " + str(count["source_groups"]) + " " + folder_word)
+        
         return None
 
 
 
 if __name__ == "__main__":
     process_files(r"D:\Users\allon\Documents\Programing\mediabutler\Test")
+
+
