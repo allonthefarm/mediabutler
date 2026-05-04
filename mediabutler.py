@@ -54,21 +54,24 @@ def extract_year_from_mtime(filepath): #get the year from Media created windows 
     return mtime_day, mtime_month, mtime_year
 
 def extract_date_from_canon(filepath, folder_name):
-    mtime_day, mtime_month, mtime_year = extract_year_from_mtime(filepath)
     folder_month, folder_day = extract_date_from_folder(folder_name)
-    if mtime_day == folder_day and mtime_month == folder_month:
-        return folder_month + "-" + folder_day + "-" + mtime_year # confident! build and return the date string MM-DD-YYYY
-    else:
-        return folder_month + "-" + folder_day + "-_" + mtime_year + "_" # not confident, flag the year with underscores
+    try: #check for a year in the Media created windows property's 
+        mtime_day, mtime_month, mtime_year = extract_year_from_mtime(filepath)
+        if mtime_day == folder_day and mtime_month == folder_month:
+            return mtime_year + "-" + folder_month + "-" + folder_day # confident! build and return the date string MM-DD-YYYY
+        else:
+            return mtime_year + "_-" + folder_month + "-" + folder_day # not confident, flag the year with underscores
+    except: #if no year return 0000 for the year
+          return "0000" + "-" + folder_month + "-" + folder_day
         
-
 def get_date(filepath, filename):
     date = extract_date(filename)
     if date is None:
         date = extract_date_from_metadata(filepath)
     if date is None:
         folder_name = Path(filepath).parent.name
-        date = extract_date_from_canon(filepath, folder_name)
+        if re.fullmatch(r'\d{3}_\d{4}', folder_name):
+            date = extract_date_from_canon(filepath, folder_name)
     # future sources would go here
     return date
 
@@ -90,11 +93,14 @@ def original_filename_to_metadata(filepath, filename):
         media.tags[key] = filename 
     media.save()
 
-def scan_files(filepath):
+def scan_files(filepath, output_folder):
     file_index = []
     for folder, subfolders, files in os.walk(filepath):
         for filename in files:
-            file_index.append({"path": Path(folder) / filename, "date": get_date(Path(folder) / filename, filename), "extension": Path(filename).suffix.lower(), "source_folder": folder})
+            if Path(folder).is_relative_to(Path(output_folder)) or Path(folder) == output_folder:
+                continue
+            else:
+                file_index.append({"path": Path(folder) / filename, "date": get_date(Path(folder) / filename, filename), "extension": Path(filename).suffix.lower(), "source_folder": folder})
     return file_index
 
 def media_file_sort(file_index):
@@ -183,23 +189,32 @@ def move_dated_files(grouped_files, output_folder):
             shutil.move(file["path"], dest_folder /new_name)
     return files_per_year, per_date
 
-
+def clean_up(output_folder, target_folder): # remove empty folder
+    for folder, subfolders, files in os.walk(target_folder, topdown=False):
+        if Path(folder).is_relative_to(Path(output_folder)) or Path(folder) == output_folder:
+            continue
+        else:
+            if not list(Path(folder).iterdir()):
+               os.rmdir(folder) 
 
 
 def process_files(target_folder):
         output_folder = Path(target_folder) / "output"
         unknown_folder = output_folder / "unknown"
 
-        file_index = scan_files(target_folder)
+        file_index = scan_files(target_folder, output_folder)
         dated, undated = no_date_sort(file_index)
         grouped = media_file_sort(dated)
 
         un_files, un_folders = move_undated_files(undated, target_folder, unknown_folder)
         files_per_year, per_date = move_dated_files(grouped, output_folder)
 
+        clean_up(output_folder, target_folder)
+
         # print summary here soon...
 
         return None
+
 
 
 if __name__ == "__main__":

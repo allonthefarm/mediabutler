@@ -17,13 +17,12 @@
 |---|---------|--------|
 | 1 | Rename files using date from filename (MM-DD-YYYY) | Complete |
 | 2 | Configurable filename parsing (patterns in config) | Complete |
-| 3 | Metadata fallback if date not in filename | Complete (untested with real tag data) |
+| 3 | Metadata fallback if date not in filename | Complete |
 | 4 | Preserve original filename in metadata | Complete |
 | 5 | Sort files into year folders | Complete |
 | 6 | Handle duplicate dates | Complete |
 | 7 | Optional prefix/suffix text in final filename | Complete (runtime override deferred) |
-
-**🎉 All 7 original features complete — program runs end-to-end!**
+| 8 | Canon VIXIA date source (folder + st_mtime cross-check) | Complete (bug active — see flags) |
 
 ---
 
@@ -53,14 +52,18 @@
 | 04-30-2026 | Extensions normalized to lowercase in scan_files | Fixes case-sensitivity bug (.wav vs .WAV grouping) |
 | 04-30-2026 | output/ wrapper folder added for year folders and unknown/ | Cleaner separation between source and processed files |
 | 04-30-2026 | DJI sub-sequence letters deferred — not confirmed as needed yet | Wait for evidence the issue actually appears in real files |
+| 05-01-2026 | st_mtime chosen over metadata for Canon files | Canon files have no embedded mutagen-readable tags |
+| 05-01-2026 | Folder name + mtime cross-check used for Canon date confidence | High confidence when partial date matches; underscores mark uncertain year |
+| 05-01-2026 | Inferred-year files go in inferred year folder, not 0000/ | Keeps files browsable in expected year; underscores flag uncertainty |
 
 ---
 
 ## Known Gaps / Flags
-- Claire's cam files have no filename date AND no metadata date — needs a third date source (next priority)
+- 🐛 **Active bug**: Canon files landing in folder named "12-1" instead of expected date — likely a date-format mismatch downstream of new Canon function
+- Files with no year info at all (no st_mtime fallback) — 0000/ year placeholder logic not yet built
+- Original filename in MEDIABUTLER_ORIGINAL custom field doesn't appear in Windows Properties — by design, since custom fields aren't shown there (use mutagen to verify)
 - End-of-program summary not yet built (stats already collected in move_dated_files)
 - Runtime override for prefix/suffix deferred — config defaults work for now
-- Feature 3 still untested with real embedded tag data
 - May want to add an MP3 with embedded tags later to verify TDRC works correctly
 - normalize_date() may need updating if new date formats are discovered
 - Stray MEDI tag left on sample file from early testing — harmless but noted
@@ -74,8 +77,7 @@
 ---
 
 ## Next Steps
-- Sub-Session 8: Add a date source for Claire's cam (likely folder name or file modification time)
+- Sub-Session 9: Fix "12-1" folder bug + handle no-year case (0000/ placeholder)
 - Future: End-of-program summary report
 - Future: Runtime override for prefix/suffix
-- Future: Test Feature 3 with a real tagged MP3 file
-- Future: Investigate Canon folder name 665_1212 for partial date extraction
+- Future: Investigate Canon folder name 665_1212 for partial date extraction (now done!)
