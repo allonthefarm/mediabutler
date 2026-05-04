@@ -18,14 +18,15 @@
 | 1 | Rename files using date from filename (MM-DD-YYYY) | Complete |
 | 2 | Configurable filename parsing (patterns in config) | Complete |
 | 3 | Metadata fallback if date not in filename | Complete |
-| 4 | Preserve original filename in metadata | Complete |
+| 4 | Preserve original filename in metadata | Complete (MP3/WAV only — MP4 skipped for speed) |
 | 5 | Sort files into year folders | Complete |
 | 6 | Handle duplicate dates | Complete |
 | 7 | Optional prefix/suffix text in final filename | Complete (runtime override deferred) |
 | 8 | Canon VIXIA date source (folder + st_mtime cross-check) | Complete |
 | 9 | Empty folder cleanup after processing | Complete |
+| 10 | End-of-program summary report | Complete |
 
-**🎉 Program runs reliably end-to-end on repeat passes!**
+**🎉 Program is feature-complete and stable!**
 
 ---
 
@@ -64,17 +65,21 @@
 | 05-04-2026 | extract_date_from_canon() only called when folder name matches \d{3}_\d{4} | Prevents misfiring on non-Canon folders |
 | 05-04-2026 | scan_files() skips output/ folder during walk | Prevents second-run from re-processing already-renamed files |
 | 05-04-2026 | clean_up() uses Path.iterdir() for live checks instead of os.walk cache | os.walk caches folder contents at start; iterdir() reflects real-time state |
+| 05-04-2026 | MP4 metadata writing skipped for now | mutagen is too slow on large video files (1.5GB+) |
+| 05-04-2026 | Metadata write supports MP3 and WAV only | WAV requires TXXX frame instead of plain string |
+| 05-04-2026 | original_filename_to_metadata() called in move_dated_files before move | Ensures filename preserved on every processed file |
 
 ---
 
 ## Known Gaps / Flags
-- End-of-program summary not yet built (stats already collected in move_dated_files)
+- MP4 metadata writing not implemented — too slow on large video files; consider re-adding with a file-size threshold
+- Could add tracking for unexpected metadata write failures to surface in the summary
 - Runtime override for prefix/suffix deferred — config defaults work for now
 - May want to add an MP3 with embedded tags later to verify TDRC works correctly
 - normalize_date() may need updating if new date formats are discovered
 - Stray MEDI tag left on sample file from early testing — harmless but noted
 - If DJI sub-sequence handling becomes needed: two-function approach (detect + assign), detection via `_` splitting, check first segment for DJI case-insensitive
-- original_filename_to_metadata() exists but isn't being called anywhere in process_files() — verify it's wired in or wire it in
+- No easy way to launch the program — currently requires editing the hardcoded path in mediabutler.py
 
 ---
 
@@ -84,6 +89,7 @@
 ---
 
 ## Next Steps
-- Sub-Session 10: Build end-of-program print summary using stats from move_dated_files (files_per_year, per_date) and move_undated_files (un_count_files, un_count_folders)
+- Sub-Session 11: Build a friendlier way to launch the program (folder picker or prompt)
+- Future: MP4 metadata support with file-size threshold
+- Future: Track unexpected metadata write failures in summary
 - Future: Runtime override for prefix/suffix
-- Future: Verify original_filename_to_metadata() is being called during processing
